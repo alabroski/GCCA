@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 __author__ = 'rupy'
 
@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import math
 from matplotlib import colors
 import h5py
+
 
 class GCCA:
 
@@ -42,7 +43,6 @@ class GCCA:
         # print np.dot(eig_vecs.T, np.dot(x_var, eig_vecs)).round().astype(int)
         return eig_vecs
 
-
     def solve_eigprob(self, left, right):
 
         self.logger.info("calculating eigen dimension")
@@ -54,7 +54,7 @@ class GCCA:
         self.logger.info("sorting eigenvalues & eigenvector")
         sort_indices = np.argsort(eig_vals)[::-1]
         eig_vals = eig_vals[sort_indices][:eig_dim].real
-        eig_vecs = eig_vecs[:,sort_indices][:,:eig_dim].real
+        eig_vecs = eig_vecs[:, sort_indices][:, :eig_dim].real
 
         return eig_vals, eig_vecs
 
@@ -65,10 +65,10 @@ class GCCA:
         self.logger.info("calc variance & covariance matrix")
         z = np.vstack([x.T for x in x_list])
         cov = np.cov(z)
-        d_list = [0] + [sum([len(x.T) for x in x_list][:i + 1]) for i in xrange(data_num)]
+        d_list = [0] + [sum([len(x.T) for x in x_list][:i + 1]) for i in range(data_num)]
         cov_mat = [[np.array([]) for col in range(data_num)] for row in range(data_num)]
-        for i in xrange(data_num):
-            for j in xrange(data_num):
+        for i in range(data_num):
+            for j in range(data_num):
                 i_start, i_end = d_list[i], d_list[i + 1]
                 j_start, j_end = d_list[j], d_list[j + 1]
                 cov_mat[i][j] = cov[i_start:i_end, j_start:j_end]
@@ -81,7 +81,7 @@ class GCCA:
 
         # regularization
         self.logger.info("adding regularization term")
-        for i in xrange(data_num):
+        for i in range(data_num):
             cov_mat[i][i] += self.reg_param * np.average(np.diag(cov_mat[i][i])) * np.eye(cov_mat[i][i].shape[0])
 
         return cov_mat
@@ -95,9 +95,9 @@ class GCCA:
             self.logger.info("data shape x_%d: %s", i, x.shape)
 
         self.logger.info("normalizing")
-        x_norm_list = [ self.normalize(x) for x in x_list]
+        x_norm_list = [self.normalize(x) for x in x_list]
 
-        d_list = [0] + [sum([len(x.T) for x in x_list][:i + 1]) for i in xrange(data_num)]
+        d_list = [0] + [sum([len(x.T) for x in x_list][:i + 1]) for i in range(data_num)]
         cov_mat = self.calc_cov_mat(x_norm_list)
         cov_mat = self.add_regularization_term(cov_mat)
 
@@ -105,14 +105,14 @@ class GCCA:
         # left = A, right = B
         left = 0.5 * np.vstack(
             [
-                np.hstack([np.zeros_like(cov_mat[i][j]) if i == j else cov_mat[i][j] for j in xrange(data_num)])
-                for i in xrange(data_num)
+                np.hstack([np.zeros_like(cov_mat[i][j]) if i == j else cov_mat[i][j] for j in range(data_num)])
+                for i in range(data_num)
             ]
         )
         right = np.vstack(
             [
-                np.hstack([np.zeros_like(cov_mat[i][j]) if i != j else cov_mat[i][j] for j in xrange(data_num)])
-                for i in xrange(data_num)
+                np.hstack([np.zeros_like(cov_mat[i][j]) if i != j else cov_mat[i][j] for j in range(data_num)])
+                for i in range(data_num)
             ]
         )
 
@@ -141,7 +141,7 @@ class GCCA:
             raise Exception('data num when fitting is different from data num to be transformed')
 
         self.logger.info("normalizing")
-        x_norm_list = [ self.normalize(x) for x in x_list]
+        x_norm_list = [self.normalize(x) for x in x_list]
 
         self.logger.info("transform matrices by GCCA")
         z_list = [np.dot(x, h_vec) for x, h_vec in zip(x_norm_list, self.h_list)]
@@ -193,17 +193,17 @@ class GCCA:
             self.data_num = f["data_num"].value
 
             self.cov_mat = [[np.array([]) for col in range(self.data_num)] for row in range(self.data_num)]
-            for i in xrange(self.data_num):
-                for j in xrange(self.data_num):
+            for i in range(self.data_num):
+                for j in range(self.data_num):
                     self.cov_mat[i][j] = f["cov_mat/" + str(i) + "_" + str(j)]
             self.h_list = [None] * self.data_num
-            for i in xrange(self.data_num):
+            for i in range(self.data_num):
                 self.h_list[i] = f["h_list/" + str(i)].value
             self.eig_vals = f["eig_vals"].value
 
             if "z_list" in f:
                 self.z_list = [None] * self.data_num
-                for i in xrange(self.data_num):
+                for i in range(self.data_num):
                     self.z_list[i] = f["z_list/" + str(i)].value
             f.flush()
 
@@ -218,15 +218,14 @@ class GCCA:
         # begin plot
         plt.figure()
 
-        color_list = colors.cnames.keys()
-        for i in xrange(self.data_num):
-
+        color_list = list(colors.cnames.keys())
+        for i in range(self.data_num):
             plt.subplot(row_num, col_num, i + 1)
             plt.plot(self.z_list[i][:, 0], self.z_list[i][:, 1], c=color_list[i], marker='.', ls=' ')
             plt.title("Z_%d(GCCA)" % (i + 1))
 
         plt.subplot(row_num, col_num, self.data_num + 1)
-        for i in xrange(self.data_num):
+        for i in range(self.data_num):
             plt.plot(self.z_list[i][:, 0], self.z_list[i][:, 1], c=color_list[i], marker='.', ls=' ')
             plt.title("Z_ALL(GCCA)")
 
@@ -236,10 +235,10 @@ class GCCA:
         for i, z_i in enumerate(self.z_list):
             for j, z_j in enumerate(self.z_list):
                 if i < j:
-                   print "(%d, %d): %f" % (i, j, np.corrcoef(z_i[:,0], z_j[:,0])[0, 1])
+                    print("(%d, %d): %f" % (i, j, np.corrcoef(z_i[:, 0], z_j[:, 0])[0, 1]))
+
 
 def main():
-
     # set log level
     logging.root.setLevel(level=logging.INFO)
 
@@ -263,13 +262,14 @@ def main():
     # transform
     gcca.transform(a, b, c, d, e, f, g, h, i, j, k)
     # save
-    gcca.save_params("save/gcca.h5")
+    # gcca.save_params("save/gcca.h5")
     # load
-    gcca.load_params("save/gcca.h5")
+    # gcca.load_params("save/gcca.h5")
     # plot
     gcca.plot_result()
     # calc correlations
     gcca.calc_correlations()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     main()
